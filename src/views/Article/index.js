@@ -1,35 +1,188 @@
 import React, { Component } from 'react'
 
-import { Card, Button, Table } from 'antd';
+import moment from 'moment'
+import * as XLSX from 'xlsx'
 
-const dataSource = [ ];
+import { Card, Button, Table, Tag, Modal, Typography, message } from 'antd';
 
-const columns = [
-  {
-    title: '姓名',
-    dataIndex: 'name',
-    key: 'name',
-  },
-  {
-    title: '年龄',
-    dataIndex: 'age',
-    key: 'age',
-  },
-  {
-    title: '住址',
-    dataIndex: 'address',
-    key: 'address',
-  },
-];
+import { getArticleList, deleteArticle } from '../../requests'
+
+const titleMap = {
+  id: 'Id',
+  title: '文章标题',
+  author: '文章作者',
+  amount: '阅读量',
+  createTime: '创建时间'
+}
+
 export default class Article extends Component {
-  
+  state = {
+    isLoading: false,
+    dataSource: [],
+    columns: [
+      // {
+      //   title: '',
+      //   dataIndex: 'title',
+      //   key: 'title',
+      // },
+      // {
+      //   title: '文章作者',
+      //   dataIndex: 'author',
+      //   key: 'author',
+      // },
+      // {
+      //   title: '阅读量',
+      //   dataIndex: 'amount',
+      //   key: 'amount',
+      // },
+      // {
+      //   title: '操作',
+      //   key: 'actios',
+      //   render:(text, record, index) => {
+      //     return (
+      //       <button>编辑</button>
+      //     )
+      //   }
+      // },
+    ],
+    total: 0,
+    offset: 0,            // 从第多少个开始
+    limited: 10
+  }
+  createColumns = (columnKeys) => {
+    const columns = columnKeys.map(item => {
+      if(item === 'amount') {
+        return {
+          title: titleMap[item],
+          key: item,
+          render: (text, record) => {
+            return <Tag color={record.amount > 300 ? 'gold' : 'red'}>{record.amount}</Tag>
+          }
+        }
+      }
+      if(item === 'createTime') {
+        return {
+          title: titleMap[item],
+          key: item,
+          render: (text, record) => {
+            return moment(record.createTime).format('YYYY-MM-DD hh:mm:ss')
+          }
+        }
+      }
+      return {
+        title: titleMap[item],
+        key: item,
+        dataIndex: item
+      }
+    })
+    columns.push({
+      title: '操作',
+      key: 'action',
+      render:(text, record) => {
+        return ( 
+          <Button.Group size='small'>
+            <Button type="primary" onClick={() => this.toEdit(record.id)}>编辑</Button>
+            <Button type="danger" onClick={this.deleteArticle.bind(this, record)}>删除</Button>
+          </Button.Group>
+        )
+      }
+    })
+    return columns
+  }
+
+  toEdit = (id) => {
+    this.props.history.push(`/admin/article/edit/${id}`)
+  }
+
+  // 删除功能
+  deleteArticle = (record) => {
+    Modal.confirm({
+      // content: `确定要删除${record.title}吗？`,
+      title: '此操作不可逆， 请谨慎操作！！',
+      content: <Typography>确定要删除<span style={{color: '#f00'}}>{record.title}</span>吗？</Typography>,
+      onOk:() => {
+        deleteArticle(record.id).then((result) => {
+          // console.log(result);
+          message.success(result.msg)
+          this.getArticles()
+        }).catch(() => {
+
+        })
+      }
+    })
+  }
+
+  getArticles = () => {
+    this.setState({
+      isLoading: true
+    })
+    getArticleList(this.state.offset, this.state.limited).then(result => {
+      // console.log(result);
+      let columnKeys = Object.keys(result.data.list[0])
+      this.setState({
+        dataSource: result.data.list,
+        total: result.data.total,
+        columns: this.createColumns(columnKeys)
+      })
+    }).catch(() => {
+
+    }).finally(() => {
+      this.setState({
+        isLoading: false
+      })
+    })
+  }
+  onPageChange = (page, pageSize) => {
+    this.setState({
+      offset: (page - 1) * pageSize,
+      limited: pageSize
+    }, () => {
+      this.getArticles()
+    })
+  }
+
+  // 导出excel,只能导出当前页
+  exportExcel = () => {
+    // 组合数据，形成二维数组
+    let data = [Object.keys(this.state.dataSource[0])]
+    for(let i = 0; i < this.state.dataSource.length; i++) {
+      // data.push(Object.values(this.state.dataSource[i]))
+      data.push([
+        this.state.dataSource[i].id,
+        this.state.dataSource[i].title,
+        this.state.dataSource[i].author,
+        this.state.dataSource[i].amount,
+        moment(this.state.dataSource[i].createTime).format('YYYY-MM-DD hh:mm:ss')
+      ])
+    }
+    /* 使用sheetjs-xlsx插件进行excel下载 */
+    /* convert state to workbook */
+		const ws = XLSX.utils.aoa_to_sheet(data);   // 这里需要传二维数组 如：[['a', 'b'],[1, 2]]
+		const wb = XLSX.utils.book_new();
+		XLSX.utils.book_append_sheet(wb, ws, "SheetJS");
+		/* generate XLSX file and send to client */
+		XLSX.writeFile(wb, `sheetjs-${moment().format('YYYYMMDDhhmmss')}.xlsx`)
+  }
+  componentDidMount() {
+    this.getArticles()
+  }
   render() {
     return (
       <Card 
         title="文章列表" 
         bordered={false} 
-        extra={<Button>导出</Button>}>
-          <Table dataSource={dataSource} columns={columns} />;
+        extra={<Button onClick={this.exportExcel}>导出Excel</Button>}>
+          <Table 
+            loading={this.state.isLoading}
+            rowKey={record => record.id}
+            dataSource={this.state.dataSource} 
+            columns={this.state.columns}
+            pagination={{
+              total: this.state.total,
+              hideOnSinglePage: true,
+              showQuickJumper: true,
+              onChange: this.onPageChange
+            }} />;
       </Card>
     )
   }

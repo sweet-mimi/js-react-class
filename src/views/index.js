@@ -2,8 +2,8 @@
     使用路由懒加载 ，装插件 react-loadable
     自己写一个loading组件
 */
-// import Loadable from 'react-loadable'
-import Loadable from '../components/loadable'   // 这是一个简易的react-loadable原理
+import Loadable from 'react-loadable'
+// import Loadable from '../components/loadable'   // 这是一个简易的react-loadable原理
 import {Loading} from '../components'
 
 // import Dashboard from "./Dashboard";
