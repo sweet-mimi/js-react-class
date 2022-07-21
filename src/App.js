@@ -4,13 +4,25 @@ import { Route, Switch, Redirect } from 'react-router-dom'
 
 import {adminRoutes} from './routes'
 
+import {connect} from 'react-redux'
+
 import {Frame} from './components'
 
 const menus = adminRoutes.filter(route => route.isNav === true)
 
-export default class App extends Component {
+const mapState = state => {
+  return {
+    isLogin: state.user.isLogin
+  }
+}
+
+@connect(mapState)
+class App extends Component {
   render() {
     return (
+      // 权限验证，根据redux里保存的数据， 登录后才能显示组件
+      this.props.isLogin
+      ?
       <Frame menus={menus}>
         <Switch>
             {
@@ -31,6 +43,10 @@ export default class App extends Component {
             <Redirect to="/404" />
         </Switch>
       </Frame>
+      :
+      <Redirect to="/login"></Redirect>
     )
   }
 }
+
+export default App

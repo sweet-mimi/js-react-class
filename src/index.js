@@ -23,10 +23,12 @@ render(
         <LanProvider locale={zhCN}>
         <Router>
             <Switch>
-                <Route path="/admin" render={(routeProps) => {
+                {/* <Route path="/admin" render={(routeProps) => {
                     // 使用render是为了做权限验证， 登录后才能访问admin
                     return <App {...routeProps} />
-                }}></Route>
+                }}></Route> */}
+                {/* 权限验证放到APP里面去做，这里可以使用component */}
+                <Route path="/admin" component={App}></Route>
 
                 {
                     mainRoutes.map(route => {
