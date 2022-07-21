@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>富文本原理</title>
+</head>
+<body>
+    <textarea name="" id="" cols="30" rows="10">
+        <!-- 没法展示 -->
+        <img src="http://i2.sinaimg.cn/gm/o/i/2008-09-09/U2653P115T41D148518F757DT20080909164057.jpg" alt="">
+    </textarea>
+
+    <button onclick="boldStyle()">加粗</button> <button onclick="italicStyle()">斜体</button> <button onclick="redFontStyle()">字体红色</button>
+    <!-- 老的编辑器可能会用 iframe 标签 -->
+    <!-- contenteditable 属性，是可以将元素变成可编辑的，比较新的编辑器使用的， 可以自动换行， 可以展示图片， 富文本编辑器就是用这个属性的 -->
+    <div contenteditable style="border: 1px solid #ccc; min-height: 300px;">
+        <img src="http://i2.sinaimg.cn/gm/o/i/2008-09-09/U2653P115T41D148518F757DT20080909164057.jpg" alt="" height="100px">
+    </div>
+    <!-- edit.md  ---》  Markdown编辑器 -->
+</body>
+<script>
+    /*
+        execCommand 方法执行一个对当前文档，当前选择或者给出范围的命令
+    */
+    const boldStyle = function() {
+        document.execCommand('Bold')
+    }
+    const italicStyle = function() {
+        document.execCommand('Italic')
+    }
+    const redFontStyle = function() {
+        document.execCommand('ForeColor', null, '#f00')
+    }
+</script>
+</html>

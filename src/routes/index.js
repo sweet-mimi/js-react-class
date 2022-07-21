@@ -4,7 +4,8 @@ import {
     NotFound,
     Settings,
     Article,
-    ArticleEdit
+    ArticleEdit,
+    Notifications
 } from '../views'
 
 // 配置路由, 动态路由
@@ -39,4 +40,8 @@ export const adminRoutes = [{        // 需要登录的路由
     title: '设置',
     icon: 'setting',
     isNav: true
+},{
+    pathname: '/admin/notification',
+    component: Notifications,
+    title: '通知中心'
 }]
