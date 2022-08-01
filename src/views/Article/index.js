@@ -119,6 +119,14 @@ export default class Article extends Component {
     getArticleList(this.state.offset, this.state.limited).then(result => {
       // console.log(result);
       let columnKeys = Object.keys(result.data.list[0])
+      /*
+        动态路由导航切换时，有axios请求时，快速点击导航按钮时，会有这样的情况：
+        点到的页面开始加载异步请求了，但是又跳转走了，这时请求数据回来了，但组件页面销毁了，这时使用setState() 方法时没有展示数据的页面了，这时会报错.
+        所以这样的情况可解决的办法是，先判断页面是否展示了，只能用 实例上的 updater中的isMounted()方法，
+        这个方法只有在dom元素加载完成时为true， dom未加载和组件销毁后为false
+        所以使用 setState()前先调用 this.updater.isMounted(this) 判断下, 如果未false 就不调用setState渲染页面了
+      */
+      // if(!this.updater.isMounted(this)) return
       this.setState({
         dataSource: result.data.list,
         total: result.data.total,
